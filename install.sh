@@ -80,6 +80,14 @@ install_openclaw() {
   fi
 }
 
+install_shell_dependencies() {
+  if [ -f "$SCRIPT_DIR/package.json" ]; then
+    info "Installing local Node dependencies for the Fr33d0m OpenClaw shell..."
+    (cd "$SCRIPT_DIR" && npm install --silent)
+    ok "Local shell dependencies installed"
+  fi
+}
+
 install_wrappers() {
   mkdir -p "$LOCAL_BIN"
   cp "$SCRIPT_DIR/bin/fr33d0m-openclaw" "$LOCAL_BIN/fr33d0m-openclaw"
@@ -234,6 +242,7 @@ print_next_steps() {
 install_system_deps
 ensure_node
 install_openclaw
+install_shell_dependencies
 install_wrappers
 ensure_path
 install_terminal_service
