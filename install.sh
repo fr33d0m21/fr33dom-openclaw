@@ -111,6 +111,32 @@ ensure_path() {
   export PATH="$LOCAL_BIN:$PATH"
 }
 
+ensure_user_systemd_ready() {
+  if ! command -v systemctl &>/dev/null; then
+    return 1
+  fi
+
+  local uid
+  uid="$(id -u)"
+
+  if command -v loginctl &>/dev/null; then
+    sudo loginctl enable-linger "$CURRENT_USER" >/dev/null 2>&1 || true
+  fi
+
+  if [ ! -d "/run/user/$uid" ] || [ ! -S "/run/user/$uid/bus" ]; then
+    sudo systemctl start "user@${uid}.service" >/dev/null 2>&1 || true
+    sleep 1
+  fi
+
+  export XDG_RUNTIME_DIR="/run/user/$uid"
+  if [ -S "$XDG_RUNTIME_DIR/bus" ]; then
+    export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+    return 0
+  fi
+
+  return 1
+}
+
 install_terminal_service() {
   info "Installing browser terminal service..."
   local systemd_dir="$HOME/.config/systemd/user"
@@ -138,17 +164,12 @@ RestartSec=10
 WantedBy=default.target
 UNIT
 
-  export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-  if [ -S "$XDG_RUNTIME_DIR/bus" ]; then
-    export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
-  fi
-
-  systemctl --user daemon-reload
-  systemctl --user enable fr33d0m-openclaw-terminal.service >/dev/null 2>&1 || true
-  systemctl --user restart fr33d0m-openclaw-terminal.service >/dev/null 2>&1 || true
-
-  if command -v loginctl &>/dev/null; then
-    sudo loginctl enable-linger "$CURRENT_USER" >/dev/null 2>&1 || true
+  if ensure_user_systemd_ready; then
+    systemctl --user daemon-reload
+    systemctl --user enable fr33d0m-openclaw-terminal.service >/dev/null 2>&1 || true
+    systemctl --user restart fr33d0m-openclaw-terminal.service >/dev/null 2>&1 || true
+  else
+    warn "Could not reach the user systemd bus; browser terminal service was installed but not started."
   fi
 
   ok "Browser terminal service configured"
@@ -180,14 +201,13 @@ RestartSec=5
 WantedBy=default.target
 UNIT
 
-  export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-  if [ -S "$XDG_RUNTIME_DIR/bus" ]; then
-    export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=$XDG_RUNTIME_DIR/bus}"
+  if ensure_user_systemd_ready; then
+    systemctl --user daemon-reload
+    systemctl --user enable fr33d0m-openclaw-shell.service >/dev/null 2>&1 || true
+    systemctl --user restart fr33d0m-openclaw-shell.service >/dev/null 2>&1 || true
+  else
+    warn "Could not reach the user systemd bus; admin shell service was installed but not started."
   fi
-
-  systemctl --user daemon-reload
-  systemctl --user enable fr33d0m-openclaw-shell.service >/dev/null 2>&1 || true
-  systemctl --user restart fr33d0m-openclaw-shell.service >/dev/null 2>&1 || true
   ok "Admin shell service configured"
 }
 
