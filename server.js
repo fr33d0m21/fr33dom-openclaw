@@ -84,7 +84,7 @@ async function readOpenClawStatus() {
 
   let terminalReachable = false
   try {
-    const response = await timeoutFetch(`http://127.0.0.1:${TERMINAL_PORT}/terminal/`)
+    const response = await timeoutFetch(`http://127.0.0.1:${TERMINAL_PORT}/`)
     terminalReachable = response.ok
   } catch {
     terminalReachable = false

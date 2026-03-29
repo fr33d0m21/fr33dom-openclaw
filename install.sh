@@ -197,7 +197,7 @@ Wants=network-online.target
 Type=simple
 Environment=OPENCLAW_HOME=$OPENCLAW_HOME
 Environment=PATH=$LOCAL_BIN:/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/bin/ttyd -p 17681 -i lo -b /terminal -t fontSize=14 -t cursorStyle=bar $LOCAL_BIN/fr33d0m-openclaw-terminal-shell
+ExecStart=/usr/bin/ttyd -p 17681 -i lo -t fontSize=14 -t cursorStyle=bar $LOCAL_BIN/fr33d0m-openclaw-terminal-shell
 Restart=on-failure
 RestartSec=10
 
