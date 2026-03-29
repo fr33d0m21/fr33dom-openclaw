@@ -4,7 +4,12 @@ const path = require('path')
 const fs = require('fs')
 const { createProxyMiddleware } = require('http-proxy-middleware')
 
-const { basicAuthRealmHeaders, isAuthorizedRequest } = require('./src/auth')
+const {
+  buildAuthSessionCookie,
+  basicAuthRealmHeaders,
+  isAuthorizedRequest,
+  parseBasicAuthHeader,
+} = require('./src/auth')
 const {
   commandExists,
   execOpenClaw,
@@ -59,8 +64,35 @@ function sendAuthChallenge(res, message) {
   return res.status(401).send(message)
 }
 
+function requestUsesBasicAuth(req, credentials) {
+  const { user = '', pass = '' } = credentials || {}
+  const parsed = parseBasicAuthHeader(req.headers.authorization || '')
+  return Boolean(parsed && parsed.user === user && parsed.pass === pass)
+}
+
+function shouldSetSecureCookie(req) {
+  if (req.secure) {
+    return true
+  }
+
+  const forwardedProto = req.headers['x-forwarded-proto']
+  return forwardedProto === 'https'
+}
+
+function ensureAuthSessionCookie(req, res) {
+  if (!requestUsesBasicAuth(req, authCredentials)) {
+    return
+  }
+
+  res.append(
+    'Set-Cookie',
+    buildAuthSessionCookie(authCredentials, { secure: shouldSetSecureCookie(req) }),
+  )
+}
+
 function requireBasicAuth(req, res, next) {
   if (isAuthorizedRequest(req, authCredentials)) {
+    ensureAuthSessionCookie(req, res)
     return next()
   }
 
