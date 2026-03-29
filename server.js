@@ -163,8 +163,45 @@ app.use((_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
 
-server.on('upgrade', openclawProxy.upgrade)
-server.on('upgrade', terminalProxy.upgrade)
+function upgradeAuthFailed(socket) {
+  socket.write('HTTP/1.1 401 Unauthorized\r\n')
+  socket.write('WWW-Authenticate: Basic realm="Fr33d0m OpenClaw"\r\n')
+  socket.write('Connection: close\r\n')
+  socket.write('\r\n')
+  socket.destroy()
+}
+
+function upgradeAuthorized(req) {
+  if (!SHELL_AUTH_USER || !SHELL_AUTH_PASS) return true
+  const auth = req.headers.authorization || ''
+  if (!auth.startsWith('Basic ')) return false
+  try {
+    const decoded = Buffer.from(auth.slice(6), 'base64').toString('utf8')
+    const [user, ...rest] = decoded.split(':')
+    const pass = rest.join(':')
+    return user === SHELL_AUTH_USER && pass === SHELL_AUTH_PASS
+  } catch {
+    return false
+  }
+}
+
+server.on('upgrade', (req, socket, head) => {
+  if (!upgradeAuthorized(req)) {
+    return upgradeAuthFailed(socket)
+  }
+
+  if (req.url && req.url.startsWith('/terminal')) {
+    req.url = req.url.replace(/^\/terminal/, '') || '/'
+    return terminalProxy.upgrade(req, socket, head)
+  }
+
+  if (req.url && req.url.startsWith('/openclaw')) {
+    req.url = req.url.replace(/^\/openclaw/, '') || '/'
+    return openclawProxy.upgrade(req, socket, head)
+  }
+
+  socket.destroy()
+})
 
 server.listen(PORT, HOST, () => {
   console.log(`Fr33d0m OpenClaw shell running at http://${HOST}:${PORT}`)
