@@ -6,7 +6,11 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node --check server.js && echo \"No tests yet\""
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:preview": "npm --prefix frontend run preview",
+    "test": "node --test && node --check server.js",
+    "verify": "npm run test && npm run frontend:build"
   },
   "repository": {
     "type": "git",
@@ -23,5 +27,8 @@
   "dependencies": {
     "express": "^5.2.1",
     "http-proxy-middleware": "^3.0.5"
+  },
+  "devDependencies": {
+    "supertest": "^7.2.2"
   }
 }

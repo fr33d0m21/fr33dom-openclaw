@@ -6,7 +6,6 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=%i
-Environment=OPENCLAW_HOME=%h/.openclaw
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 ExecStart=/usr/bin/ttyd -p 17681 -i lo -t fontSize=14 -t cursorStyle=bar %h/.local/bin/fr33d0m-openclaw-terminal-shell
 Restart=on-failure

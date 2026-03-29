@@ -117,7 +117,19 @@ install_shell_dependencies() {
   if [ -f "$SCRIPT_DIR/package.json" ]; then
     info "Installing local Node dependencies for the Fr33d0m OpenClaw shell..."
     (cd "$SCRIPT_DIR" && npm install --silent)
+    if [ -f "$SCRIPT_DIR/frontend/package.json" ]; then
+      info "Installing React dashboard dependencies..."
+      (cd "$SCRIPT_DIR" && npm --prefix frontend install --silent)
+    fi
     ok "Local shell dependencies installed"
+  fi
+}
+
+build_dashboard_frontend() {
+  if [ -f "$SCRIPT_DIR/frontend/package.json" ]; then
+    info "Building the Fr33d0m OpenClaw dashboard..."
+    (cd "$SCRIPT_DIR" && npm run frontend:build --silent)
+    ok "Dashboard frontend built"
   fi
 }
 
@@ -195,7 +207,6 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-Environment=OPENCLAW_HOME=$OPENCLAW_HOME
 Environment=PATH=$LOCAL_BIN:/usr/local/bin:/usr/bin:/bin
 ExecStart=/usr/bin/ttyd -p 17681 -i lo -t fontSize=14 -t cursorStyle=bar $LOCAL_BIN/fr33d0m-openclaw-terminal-shell
 Restart=on-failure
@@ -229,7 +240,6 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-Environment=OPENCLAW_HOME=$OPENCLAW_HOME
 Environment=OPENCLAW_SHELL_HOST=0.0.0.0
 Environment=OPENCLAW_SHELL_PORT=18643
 EnvironmentFile=$SHELL_ENV_FILE
@@ -268,7 +278,7 @@ print_next_steps() {
   echo ""
   echo -e "${BOLD}${GREEN}┌─────────────────────────────────────────────────────────────┐${RESET}"
   echo -e "${BOLD}${GREEN}│                                                             │${RESET}"
-  echo -e "${BOLD}${GREEN}│   Fr33d0m OpenClaw scaffold is ready                        │${RESET}"
+  echo -e "${BOLD}${GREEN}│   Fr33d0m OpenClaw dashboard is ready                       │${RESET}"
   echo -e "${BOLD}${GREEN}│                                                             │${RESET}"
   echo -e "${BOLD}${GREEN}├─────────────────────────────────────────────────────────────┤${RESET}"
   echo -e "${BOLD}│${RESET}  ${CYAN}fr33d0m-openclaw onboard --install-daemon${RESET}                 ${BOLD}│${RESET}"
@@ -278,6 +288,7 @@ print_next_steps() {
   echo -e "${BOLD}│${RESET}      Start the OpenClaw Gateway manually                     ${BOLD}│${RESET}"
   echo -e "${BOLD}│${RESET}                                                             ${BOLD}│${RESET}"
   echo -e "${BOLD}│${RESET}  ${CYAN}Fr33d0m shell${RESET}:    http://0.0.0.0:18643/                 ${BOLD}│${RESET}"
+  echo -e "${BOLD}│${RESET}      Dashboard routes: /, /runtime, /sessions, /skills        ${BOLD}│${RESET}"
   echo -e "${BOLD}│${RESET}  ${CYAN}OpenClaw Control UI${RESET}: proxied at /openclaw/              ${BOLD}│${RESET}"
   echo -e "${BOLD}│${RESET}  ${CYAN}Browser terminal${RESET}:  proxied at /terminal/              ${BOLD}│${RESET}"
   echo -e "${BOLD}│${RESET}                                                             ${BOLD}│${RESET}"
@@ -293,6 +304,7 @@ ensure_node
 install_openclaw
 ensure_shell_auth_env
 install_shell_dependencies
+build_dashboard_frontend
 install_wrappers
 ensure_path
 install_terminal_service
