@@ -12,6 +12,7 @@ OPENCLAW_HOME="${OPENCLAW_HOME:-$HOME/.openclaw}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 LOCAL_BIN="$HOME/.local/bin"
 CURRENT_USER="$(whoami)"
+SHELL_ENV_FILE="$OPENCLAW_HOME/fr33d0m-shell.env"
 
 info()  { printf "${CYAN}→${RESET} %s\n" "$1"; }
 ok()    { printf "${GREEN}✓${RESET} %s\n" "$1"; }
@@ -78,6 +79,38 @@ install_openclaw() {
     sudo npm install -g openclaw@latest
     ok "OpenClaw installed"
   fi
+}
+
+ensure_shell_auth_env() {
+  mkdir -p "$OPENCLAW_HOME"
+
+  local shell_user="fr33d0m"
+  local shell_pass=""
+
+  if [ -f "$SHELL_ENV_FILE" ]; then
+    # shellcheck disable=SC1090
+    source "$SHELL_ENV_FILE"
+    shell_user="${FR33D0M_OPENCLAW_SHELL_USER:-$shell_user}"
+    shell_pass="${FR33D0M_OPENCLAW_SHELL_PASS:-}"
+  fi
+
+  if [ -z "$shell_pass" ]; then
+    shell_pass="$(python3 - <<'PY'
+import secrets
+print(secrets.token_urlsafe(18))
+PY
+)"
+  fi
+
+  cat > "$SHELL_ENV_FILE" <<EOF
+FR33D0M_OPENCLAW_SHELL_USER=$shell_user
+FR33D0M_OPENCLAW_SHELL_PASS=$shell_pass
+EOF
+  chmod 600 "$SHELL_ENV_FILE"
+
+  export FR33D0M_OPENCLAW_SHELL_USER="$shell_user"
+  export FR33D0M_OPENCLAW_SHELL_PASS="$shell_pass"
+  ok "Shell auth credentials prepared"
 }
 
 install_shell_dependencies() {
@@ -197,8 +230,9 @@ Wants=network-online.target
 [Service]
 Type=simple
 Environment=OPENCLAW_HOME=$OPENCLAW_HOME
-Environment=OPENCLAW_SHELL_HOST=127.0.0.1
+Environment=OPENCLAW_SHELL_HOST=0.0.0.0
 Environment=OPENCLAW_SHELL_PORT=18643
+EnvironmentFile=$SHELL_ENV_FILE
 Environment=PATH=$LOCAL_BIN:/usr/local/bin:/usr/bin:/bin
 WorkingDirectory=$SCRIPT_DIR
 ExecStart=/usr/bin/env node $SCRIPT_DIR/server.js
@@ -219,6 +253,17 @@ UNIT
   ok "Admin shell service configured"
 }
 
+open_public_firewall() {
+  info "Opening public access to the Fr33d0m OpenClaw shell on port 18643..."
+  if command -v ufw >/dev/null 2>&1; then
+    sudo ufw allow 18643/tcp >/dev/null 2>&1 || true
+  else
+    sudo iptables -C INPUT -p tcp --dport 18643 -j ACCEPT >/dev/null 2>&1 || \
+      sudo iptables -A INPUT -p tcp --dport 18643 -j ACCEPT >/dev/null 2>&1 || true
+  fi
+  ok "Public shell port configured"
+}
+
 print_next_steps() {
   echo ""
   echo -e "${BOLD}${GREEN}┌─────────────────────────────────────────────────────────────┐${RESET}"
@@ -232,9 +277,13 @@ print_next_steps() {
   echo -e "${BOLD}│${RESET}  ${CYAN}fr33d0m-openclaw gateway --port 18789 --verbose${RESET}          ${BOLD}│${RESET}"
   echo -e "${BOLD}│${RESET}      Start the OpenClaw Gateway manually                     ${BOLD}│${RESET}"
   echo -e "${BOLD}│${RESET}                                                             ${BOLD}│${RESET}"
-  echo -e "${BOLD}│${RESET}  ${CYAN}Fr33d0m shell${RESET}:    http://127.0.0.1:18643/               ${BOLD}│${RESET}"
-  echo -e "${BOLD}│${RESET}  ${CYAN}OpenClaw Control UI${RESET}: http://127.0.0.1:18789/             ${BOLD}│${RESET}"
-  echo -e "${BOLD}│${RESET}  ${CYAN}Browser terminal${RESET}:  http://127.0.0.1:17681/terminal/      ${BOLD}│${RESET}"
+  echo -e "${BOLD}│${RESET}  ${CYAN}Fr33d0m shell${RESET}:    http://0.0.0.0:18643/                 ${BOLD}│${RESET}"
+  echo -e "${BOLD}│${RESET}  ${CYAN}OpenClaw Control UI${RESET}: proxied at /openclaw/              ${BOLD}│${RESET}"
+  echo -e "${BOLD}│${RESET}  ${CYAN}Browser terminal${RESET}:  proxied at /terminal/              ${BOLD}│${RESET}"
+  echo -e "${BOLD}│${RESET}                                                             ${BOLD}│${RESET}"
+  echo -e "${BOLD}│${RESET}  Public shell basic auth:                                      ${BOLD}│${RESET}"
+  echo -e "${BOLD}│${RESET}    user: ${FR33D0M_OPENCLAW_SHELL_USER}                                         ${BOLD}│${RESET}"
+  echo -e "${BOLD}│${RESET}    pass: ${FR33D0M_OPENCLAW_SHELL_PASS}                            ${BOLD}│${RESET}"
   echo -e "${BOLD}${GREEN}└─────────────────────────────────────────────────────────────┘${RESET}"
   echo ""
 }
@@ -242,11 +291,13 @@ print_next_steps() {
 install_system_deps
 ensure_node
 install_openclaw
+ensure_shell_auth_env
 install_shell_dependencies
 install_wrappers
 ensure_path
 install_terminal_service
 install_admin_shell_service
+open_public_firewall
 
 mkdir -p "$OPENCLAW_HOME"
 

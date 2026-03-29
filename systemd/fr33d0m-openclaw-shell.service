@@ -7,8 +7,9 @@ Wants=network-online.target
 Type=simple
 User=%i
 Environment=OPENCLAW_HOME=%h/.openclaw
-Environment=OPENCLAW_SHELL_HOST=127.0.0.1
+Environment=OPENCLAW_SHELL_HOST=0.0.0.0
 Environment=OPENCLAW_SHELL_PORT=18643
+EnvironmentFile=%h/.openclaw/fr33d0m-shell.env
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 WorkingDirectory=%h/fr33dom-openclaw
 ExecStart=/usr/bin/env node %h/fr33dom-openclaw/server.js

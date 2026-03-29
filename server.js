@@ -17,8 +17,38 @@ const OPENCLAW_PORT = Number(process.env.OPENCLAW_GATEWAY_PORT || 18789)
 const TERMINAL_PORT = Number(process.env.OPENCLAW_TERMINAL_PORT || 17681)
 const OPENCLAW_HOME = process.env.OPENCLAW_HOME || path.join(process.env.HOME || '', '.openclaw')
 const OPENCLAW_CONFIG_PATH = path.join(OPENCLAW_HOME, 'openclaw.json')
+const SHELL_AUTH_USER = process.env.FR33D0M_OPENCLAW_SHELL_USER || ''
+const SHELL_AUTH_PASS = process.env.FR33D0M_OPENCLAW_SHELL_PASS || ''
 
 app.use(express.json())
+
+function requireBasicAuth(req, res, next) {
+  if (!SHELL_AUTH_USER || !SHELL_AUTH_PASS) {
+    return next()
+  }
+
+  const auth = req.headers.authorization || ''
+  if (!auth.startsWith('Basic ')) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Fr33d0m OpenClaw"')
+    return res.status(401).send('Authentication required')
+  }
+
+  try {
+    const decoded = Buffer.from(auth.slice(6), 'base64').toString('utf8')
+    const [user, ...rest] = decoded.split(':')
+    const pass = rest.join(':')
+    if (user === SHELL_AUTH_USER && pass === SHELL_AUTH_PASS) {
+      return next()
+    }
+  } catch {
+    // fall through to 401
+  }
+
+  res.setHeader('WWW-Authenticate', 'Basic realm="Fr33d0m OpenClaw"')
+  return res.status(401).send('Invalid credentials')
+}
+
+app.use(requireBasicAuth)
 app.use(express.static(path.join(__dirname, 'public')))
 
 function timeoutFetch(url, options = {}, timeoutMs = 2000) {
@@ -74,6 +104,7 @@ async function readOpenClawStatus() {
     openclawInstalled,
     ttydInstalled,
     openclawVersion,
+    shellAuthEnabled: Boolean(SHELL_AUTH_USER && SHELL_AUTH_PASS),
     configExists,
     configPath: OPENCLAW_CONFIG_PATH,
     gatewayReachable,
