@@ -1,0 +1,27 @@
+{
+  "name": "fr33dom-openclaw",
+  "version": "1.0.0",
+  "description": "An OpenClaw-based Fr33d0m VM project.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --check server.js && echo \"No tests yet\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fr33d0m21/fr33dom-openclaw.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/fr33d0m21/fr33dom-openclaw/issues"
+  },
+  "homepage": "https://github.com/fr33d0m21/fr33dom-openclaw#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "http-proxy-middleware": "^3.0.5"
+  }
+}

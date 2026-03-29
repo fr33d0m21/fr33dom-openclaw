@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="${SCRIPT_DIR:-$HOME/fr33dom-openclaw}"
+
+if [ ! -f "$SCRIPT_DIR/server.js" ]; then
+  echo "Error: could not find server.js in $SCRIPT_DIR"
+  echo "Clone the repo to ~/fr33dom-openclaw or set SCRIPT_DIR first."
+  exit 1
+fi
+
+exec node "$SCRIPT_DIR/server.js"

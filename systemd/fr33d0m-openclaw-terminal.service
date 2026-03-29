@@ -1,0 +1,18 @@
+[Unit]
+Description=Fr33d0m OpenClaw Browser Terminal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+Environment=OPENCLAW_HOME=%h/.openclaw
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/ttyd -p 17681 -i lo -b /terminal -t fontSize=14 -t cursorStyle=bar %h/.local/bin/fr33d0m-openclaw-terminal-shell
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

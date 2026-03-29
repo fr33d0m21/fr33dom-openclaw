@@ -1,0 +1,21 @@
+[Unit]
+Description=Fr33d0m OpenClaw Admin Shell
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+Environment=OPENCLAW_HOME=%h/.openclaw
+Environment=OPENCLAW_SHELL_HOST=127.0.0.1
+Environment=OPENCLAW_SHELL_PORT=18643
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+WorkingDirectory=%h/fr33dom-openclaw
+ExecStart=/usr/bin/env node %h/fr33dom-openclaw/server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

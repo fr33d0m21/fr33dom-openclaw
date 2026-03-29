@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Fr33d0m-branded wrapper for the OpenClaw CLI.
+
+OPENCLAW_CMD="$(command -v openclaw 2>/dev/null || true)"
+
+if [ -z "$OPENCLAW_CMD" ] || [ ! -x "$OPENCLAW_CMD" ]; then
+  echo "Error: openclaw not found."
+  echo "Install it first with: bash install.sh"
+  exit 1
+fi
+
+exec "$OPENCLAW_CMD" "$@"

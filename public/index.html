@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fr33d0m OpenClaw</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="hero">
+        <div>
+          <div class="eyebrow">Fr33d0m OpenClaw</div>
+          <h1>OpenClaw VM Admin Shell</h1>
+          <p>
+            A lightweight operator UI for an Ubuntu OpenClaw VM. It links the
+            real OpenClaw Gateway UI with a browser shell so you can onboard,
+            debug, and snapshot a repeatable image.
+          </p>
+        </div>
+        <button id="refresh" class="primary">Refresh status</button>
+      </header>
+
+      <main class="grid">
+        <section class="card">
+          <h2>Status</h2>
+          <div class="stat-list">
+            <div class="stat">
+              <span>OpenClaw CLI</span>
+              <strong id="openclaw-installed">...</strong>
+            </div>
+            <div class="stat">
+              <span>OpenClaw Gateway</span>
+              <strong id="gateway-status">...</strong>
+            </div>
+            <div class="stat">
+              <span>Browser Terminal</span>
+              <strong id="terminal-status">...</strong>
+            </div>
+            <div class="stat">
+              <span>Config</span>
+              <strong id="config-status">...</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Launchers</h2>
+          <div class="actions">
+            <a class="primary" href="/openclaw/" target="_blank" rel="noreferrer">Open OpenClaw UI</a>
+            <a class="secondary" href="/terminal/" target="_blank" rel="noreferrer">Open Browser Terminal</a>
+          </div>
+          <p class="muted">
+            The OpenClaw Control UI should appear on port 18789 once the
+            gateway is running. The browser terminal is provided separately via
+            `ttyd`.
+          </p>
+        </section>
+
+        <section class="card">
+          <h2>Bootstrap</h2>
+          <ol id="commands" class="commands"></ol>
+        </section>
+
+        <section class="card">
+          <h2>Notes</h2>
+          <ul class="notes">
+            <li>Run `fr33d0m-openclaw onboard --install-daemon` first.</li>
+            <li>The OpenClaw Control UI is served by the Gateway itself.</li>
+            <li>This shell is intended as a branded launcher and status page, not a replacement for the real OpenClaw UI yet.</li>
+            <li>Once validated, snapshot the Ubuntu Desktop VM on DigitalOcean.</li>
+          </ul>
+        </section>
+      </main>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

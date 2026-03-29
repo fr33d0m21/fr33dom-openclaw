@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+clear
+cat <<'EOF'
+============================================================
+                FR33D0M OPENCLAW TERMINAL
+============================================================
+
+This is a full shell for your OpenClaw VM.
+
+Useful commands:
+  fr33d0m-openclaw onboard --install-daemon
+  fr33d0m-openclaw gateway --port 18789 --verbose
+  fr33d0m-openclaw doctor
+  fr33d0m-openclaw config get
+
+Expected OpenClaw UI:
+  http://127.0.0.1:18789/
+
+This terminal is intended as an operator/admin shell.
+Use it for setup, debugging, and service checks.
+
+============================================================
+EOF
+
+if [ -f "$HOME/.bashrc" ]; then
+  # shellcheck disable=SC1090
+  source "$HOME/.bashrc"
+fi
+
+exec /bin/bash -il
